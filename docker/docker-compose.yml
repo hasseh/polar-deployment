@@ -1,5 +1,22 @@
 version: "3.8"
 services:
+  edge-service:
+    depends_on:
+      - polar-redis
+    image: "edge-service"
+    container_name: "edge-service"
+    ports:
+      - 9000:9000
+      - 8000:8000
+    environment:
+      - BPL_DEBUG_ENABLED=true
+      - BPL_DEBUG_PORT=8000
+      - BPL_JVM_THREAD_COUNT=50
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
+      - SPRING_REDIS_HOST=polar-redis
+      - CATALOG_SERVICE_URL=http://catalog-service:9001
+      - ORDER_SERVICE_URL=http://order-service:9002
+
   catalog-service:
     depends_on:
       - polar-postgres
@@ -45,6 +62,7 @@ services:
         # Buildpacks environment variable to enable debug through a socket on port 9888
         - BPL_DEBUG_ENABLED=true
         - BPL_DEBUG_PORT=9888
+
 # Supporting services
   polar-postgres:
     image: "postgres:14.4"
@@ -56,3 +74,9 @@ services:
       - POSTGRES_PASSWORD=password
     volumes:
       - ./postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  polar-redis:
+    image: "redis:7.0"
+    container_name: "polar-redis"
+    ports:
+      - 6379:6379
